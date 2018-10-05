@@ -1,0 +1,65 @@
+#Andrew Morgan
+#Updated 09/2018
+
+#OPTIONS:
+
+#IDS: Place the servo ids you intend to use in the list. Please note
+#that the order you choose is important to which motor is added for
+#each finger.
+
+#Servo Type: This package supports 'RX','MX', and "XM" Dynamixel motors.
+#If you have any protocol 2 X-Series, input 'XM' as the motor type.
+
+#Servo port can be found using the commands noted on the Yale Openhand Workshop page.
+
+#The type must be exact to what is specified in code. I recommend using the
+#predefined blocks as specified.
+
+#The direction of the motors is unique to each openhand. Please follow the blocks below.
+#You should not have to change this value in the block, this is taken into accound in the hands.py file
+
+#The motor_offset is used to calibrate motors so that slack in the tendons is mitigated
+#These are sensitive to the servo_ids order you specified earlier
+
+#------------------------------
+
+#Model O
+#servo_ids: [2,1,3,4]
+#servo_type: 'RX'
+#servo_port: '/dev/ttyUSB0'
+#openhand_type: 'Model_O'
+#direction: 1
+#motor_offset: [0.,0.11,0.13,0.09]
+
+#Model O
+servo_ids: [1,2,3,4]
+servo_type: 'XM'
+servo_port: '/dev/ttyUSB0'
+openhand_type: 'Model_O'
+direction: 1
+motor_offset: [0.0,0.08,0.0,0.2]
+
+#------------------------------#
+
+
+#Model T
+#servo_ids: [1]
+#servo_type: 'MX'
+#servo_port: '/dev/ttyUSB0'
+#openhand_type: 'Model_T'
+#direction: 1
+#motor_offset: [0.]
+
+#------------------------------#
+
+#Model T42
+#servo_ids: [0,2]
+#servo_type: 'RX'
+#servo_port: '/dev/ttyUSB0'
+#openhand_type: 'Model_T42'
+#direction: 1
+#motor_offset: [0.,0.]
+
+#------------------------------#
+
+#Additional models will be implemented in the future

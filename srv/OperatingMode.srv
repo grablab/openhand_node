@@ -1,0 +1,4 @@
+bool[] pos_control
+int32[] servo_indices
+---
+int32 err

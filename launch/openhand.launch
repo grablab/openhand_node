@@ -1,0 +1,5 @@
+<launch>
+	<node pkg="openhand_node" name="openhandNode" type="openhandNode.py" output="screen">
+		<rosparam command="load" file="$(find openhand_node)/param/model_parameters.yaml"/>
+	</node>
+</launch>

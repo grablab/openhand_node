@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package>
+  <name>openhand_node</name>
+  <version>0.0.0</version>
+  <description>The openhand package for motor communication</description>
+
+  <maintainer email="Andrew.Morgan@yale.edu">Andy Morgan</maintainer>
+
+  <license>MIT</license>
+
+  <build_depend>message_generation</build_depend>
+  <build_depend>message_runtime</build_depend>
+  <run_depend>message_runtime</run_depend>
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>rospy</build_depend>
+  <run_depend>rospy</run_depend>
+
+</package>
