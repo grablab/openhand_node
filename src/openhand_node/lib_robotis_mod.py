@@ -910,7 +910,7 @@ def recover_protocol2_servo(dyn):
 ##Function used for recovering a bricked protocol 1.0 servo
 #This will reset all in the chain, so make sure only one is connected
 def recover_protocol1_servo(dyn):
-    msg = [ 254, 2, 6] # instruction includes the command (1 byte + parameters. length = parameters+2)
+    msg = [ 254, 2, 6] # instruction includes the command (1 byte + parameters. length = parameters+2) http://emanual.robotis.com/docs/en/dxl/protocol1/
     chksum = 0
     for m in msg:
         chksum += m

@@ -366,7 +366,7 @@ class Model_O(OpenHand):
 	#RESET THE MOTOR MINS FOR FASTER INITIALIZATION
 	motorDir = [1,1,-1,1] # one finger is opposite due to placement on the openhand base
 	motorMin = [0.0,0.22,0.13,0.27]
-	motorMax = [motorMin[0]+0.48,motorMin[1]+max_close,motorMin[2]+max_close,motorMin[3]+max_close]
+	motorMax = [motorMin[0]+0.40,motorMin[1]+max_close,motorMin[2]+max_close,motorMin[3]+max_close] #RX and MX motors may use an offset of 0.48 instead of 0.40
 
 	HAND_HEIGHT = 0.14
 	WRIST_OFFSET = -np.pi/4
@@ -382,7 +382,7 @@ class Model_O(OpenHand):
 		if(mot_offset != self.motorMin):  #update motor mins if initialized to different values
 			print 'Setting new motor minimums... '
 			self.motorMin = mot_offset
-			self.motorMax = [self.motorMin[0]+0.48,self.motorMin[1]+self.max_close,self.motorMin[2]+self.max_close,self.motorMin[3]+self.max_close]
+			self.motorMax = [self.motorMin[0]+0.40,self.motorMin[1]+self.max_close,self.motorMin[2]+self.max_close,self.motorMin[3]+self.max_close]
 
 		OpenHand.__init__(self,port,[s1,s2,s3,s4],dyn_model)
 
