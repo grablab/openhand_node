@@ -72,18 +72,23 @@ class OpenHand():
 			self.motorMin = [self.amnt_release]*num_servos
 			self.motorMax = [self.amnt_close]*num_servos
 
-		for i in range(num_servos):
-			enc = self.servos[i].read_encoder()
-			if series == "RX":
-				if (self.motorDir[i] ==1 and enc > 512) or (self.motorDir[i] == -1 and enc < 512):
+		if num_servos ==4: #This is the model_O and we want to prevent gear shear
+			for i in range(num_servos):
+				enc = self.servos[i].read_encoder()
+				if series == "RX":
+					if (self.motorDir[i] ==1 and enc > 512) or (self.motorDir[i] == -1 and enc < 512):
+						print "------------FAILSAFE-------------"
+						print "Failsafe is incorporated to prevent gear shear in Model O"
+						print "Motor encoder postion: ", enc
+						input = raw_input("Your encoder position for motor index " + str(i) + " may cause the motor to move backwards, proceed? [ENTER]")
+					else:
+						print "Motor directions not set..."
+				#These would then be the MX and XM motors
+				elif (self.motorDir[i] ==1 and enc > 2048) or (self.motorDir[i] == -1 and enc < 2048):
+					print "------------FAILSAFE-------------"
+					print "Failsafe is incorporated to prevent gear shear in Model O"
 					print "Motor encoder postion: ", enc
 					input = raw_input("Your encoder position for motor index " + str(i) + " may cause the motor to move backwards, proceed? [ENTER]")
-				else:
-					print "Motor directions not set..."
-			#These would then be the MX and XM motors
-			elif (self.motorDir[i] ==1 and enc > 2048) or (self.motorDir[i] == -1 and enc < 2048):
-				print "Motor encoder postion: ", enc
-				input = raw_input("Your encoder position for motor index " + str(i) + " may cause the motor to move backwards, proceed? [ENTER]")
 
 		time.sleep(self.pause)
 		self.reset()
