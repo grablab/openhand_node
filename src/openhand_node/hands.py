@@ -71,6 +71,20 @@ class OpenHand():
 			self.motorDir = [1]*num_servos
 			self.motorMin = [self.amnt_release]*num_servos
 			self.motorMax = [self.amnt_close]*num_servos
+
+		for i in range(num_servos):
+			enc = self.servos[i].read_encoder()
+			if series == "RX":
+				if (self.motorDir[i] ==1 and enc > 512) or (self.motorDir[i] == -1 and enc < 512):
+					print "Motor encoder postion: ", enc
+					input = raw_input("Your encoder position for motor index " + str(i) + " may cause the motor to move backwards, proceed? [ENTER]")
+				else:
+					print "Motor directions not set..."
+			#These would then be the MX and XM motors
+			elif (self.motorDir[i] ==1 and enc > 2048) or (self.motorDir[i] == -1 and enc < 2048):
+				print "Motor encoder postion: ", enc
+				input = raw_input("Your encoder position for motor index " + str(i) + " may cause the motor to move backwards, proceed? [ENTER]")
+
 		time.sleep(self.pause)
 		self.reset()
 		print "Initialization Complete."
@@ -366,7 +380,8 @@ class Model_O(OpenHand):
 	#RESET THE MOTOR MINS FOR FASTER INITIALIZATION
 	motorDir = [1,1,-1,1] # one finger is opposite due to placement on the openhand base
 	motorMin = [0.0,0.22,0.13,0.27]
-	motorMax = [motorMin[0]+0.40,motorMin[1]+max_close,motorMin[2]+max_close,motorMin[3]+max_close] #RX and MX motors may use an offset of 0.48 instead of 0.40
+	adduct_amount = 0.37
+	motorMax = [motorMin[0]+adduct_amount,motorMin[1]+max_close,motorMin[2]+max_close,motorMin[3]+max_close] #RX and MX motors may use an offset of 0.48 instead of 0.40
 
 	HAND_HEIGHT = 0.14
 	WRIST_OFFSET = -np.pi/4
@@ -382,7 +397,7 @@ class Model_O(OpenHand):
 		if(mot_offset != self.motorMin):  #update motor mins if initialized to different values
 			print 'Setting new motor minimums... '
 			self.motorMin = mot_offset
-			self.motorMax = [self.motorMin[0]+0.40,self.motorMin[1]+self.max_close,self.motorMin[2]+self.max_close,self.motorMin[3]+self.max_close]
+			self.motorMax = [self.motorMin[0]+self.adduct_amount,self.motorMin[1]+self.max_close,self.motorMin[2]+self.max_close,self.motorMin[3]+self.max_close]
 
 		OpenHand.__init__(self,port,[s1,s2,s3,s4],dyn_model)
 
