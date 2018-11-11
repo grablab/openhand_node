@@ -61,7 +61,8 @@ class OpenHand():
 			servo.kill_cont_turn()		#make sure position mode limits are enabled
 
 			time.sleep(self.pause)		#in case eeprom delay is what is causing the issues
-			#servo.apply_speed(1)
+			if series == "RX":
+				servo.apply_speed(1)
 			time.sleep(self.pause)
 			servo.apply_max_torque(self.max_torque)
 		self.modes = [True]*num_servos		#default assignment (shouldn't have servos in torque mode during normal operation)
@@ -72,7 +73,7 @@ class OpenHand():
 			self.motorMin = [self.amnt_release]*num_servos
 			self.motorMax = [self.amnt_close]*num_servos
 
-		if num_servos ==4: #This is the model_O and we want to prevent gear shear
+		if num_servos == 4: #This is the model_O and we want to prevent gear shear
 			for i in range(num_servos):
 				enc = self.servos[i].read_encoder()
 				if series == "RX":
@@ -80,7 +81,7 @@ class OpenHand():
 						print "------------FAILSAFE-------------"
 						print "Failsafe is incorporated to prevent gear shear in Model O"
 						print "Motor encoder postion: ", enc
-						input = raw_input("Your encoder position for motor index " + str(i) + " may cause the motor to move backwards, proceed? [ENTER]")
+						input = raw_input("Your encoder position for motor index " + str(i) + " may cause the motor to move backwards and break gears. We recommend you resetting the fingers to prevent gear shear, proceed? [ENTER]")
 					else:
 						print "Motor directions not set..."
 				#These would then be the MX and XM motors
@@ -88,7 +89,14 @@ class OpenHand():
 					print "------------FAILSAFE-------------"
 					print "Failsafe is incorporated to prevent gear shear in Model O"
 					print "Motor encoder postion: ", enc
-					input = raw_input("Your encoder position for motor index " + str(i) + " may cause the motor to move backwards, proceed? [ENTER]")
+					input = raw_input("As an XM Motor, we can automatically fix this issue for motor " + str(i) + ", proceed? [ENTER]")
+					self.servos[i].enable_extended_position_control_mode()
+					self.servos[i].move_to_encoder(self.servos[i].settings['max_encoder']+100)
+					time.sleep(self.pause)
+					self.servos[i] = Robotis_Servo_X(self.dyn,servo_ids[i],series)
+					time.sleep(self.pause)
+					servo.apply_max_torque(self.max_torque)
+					print "Fixed servo from ID: "+repr(servo_ids[i])
 
 		time.sleep(self.pause)
 		self.reset()

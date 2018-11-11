@@ -516,6 +516,7 @@ class Robotis_Servo_X():
 
         #We will do this initially so that we will enable torque
         self.enable_position_mode()
+        self.in_extended_position_control_mode = False
 
     #Move motor then with .set_angvel
     def init_cont_turn(self):
@@ -652,8 +653,12 @@ class Robotis_Servo_X():
         '''
         # In some border cases, we can end up above/below the encoder limits.
         #   eg. int(round(math.radians( 180 ) / ( math.radians(360) / 0xFFF ))) + 0x7FF => -1
-        n = min( max( n, 0 ), self.settings['max_encoder'] )
-        hi,lo = n / 256, n % 256
+        if self.in_extended_position_control_mode == False:
+            n = min( max( n, 0 ), self.settings['max_encoder'] )
+            hi,lo = n / 256, n % 256
+        else:
+            n = twos_comp_forward(n,16)
+            hi,lo = (n >>8) & 0xff, n & 0xff
         return self.write_address( self.ADDR_DICT["ADDR_GOAL_POSITION"], [lo,hi,0,0] )
 
     #ADDED: reading the goal encoder position that the user has specified
@@ -678,6 +683,18 @@ class Robotis_Servo_X():
     def enable_position_mode(self): #returns back to position control
         self.disable_torque()
         self.write_address(self.ADDR_DICT["ADDR_OPERATING_MODE"], [self.ADDR_DICT["POSITION_CONTROL_MODE"]])
+        return self.enable_torque()
+
+    def enable_extended_position_control_mode(self):
+        self.disable_torque()
+        self.write_address(self.ADDR_DICT["ADDR_OPERATING_MODE"], [4])
+        self.in_extended_position_control_mode = True
+        return self.enable_torque()
+
+    def disable_extended_position_control_mode(self):
+        self.disable_torque()
+        self.write_address(self.ADDR_DICT["ADDR_OPERATING_MODE"], [self.ADDR_DICT["POSITION_CONTROL_MODE"]])
+        self.in_extended_position_control_mode = False
         return self.enable_torque()
 
     #Functionality for negative torque is now different and uses 2's complement
