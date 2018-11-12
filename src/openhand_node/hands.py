@@ -94,9 +94,7 @@ class OpenHand():
 					self.servos[i].move_to_encoder(self.servos[i].settings['max_encoder']+100)
 					time.sleep(self.pause)
 					self.servos[i].disable_extended_position_control_mode()
-					self.servos[i] = Robotis_Servo_X(self.dyn,servo_ids[i],series)
 					time.sleep(self.pause)
-					servo.apply_max_torque(self.max_torque)
 					print "Fixed servo from ID: "+repr(servo_ids[i])
 
 		time.sleep(self.pause)
