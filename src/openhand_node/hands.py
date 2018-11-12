@@ -96,6 +96,9 @@ class OpenHand():
 					self.servos[i].disable_extended_position_control_mode()
 					time.sleep(self.pause)
 					print "Fixed servo from ID: "+repr(servo_ids[i])
+			#Finally, limit the abduction_torque if desired
+			if self.abduction_limit !=1:
+				self.servos[0].enable_current_position_control_mode(self.abduction_limit)
 
 		time.sleep(self.pause)
 		self.reset()
@@ -398,7 +401,7 @@ class Model_O(OpenHand):
 	HAND_HEIGHT = 0.14
 	WRIST_OFFSET = -np.pi/4
 
-	def __init__(self,port="/dev/ttyUSB0",s1=2,s2=1,s3=3,s4=4,dyn_model="RX",s1_min=motorMin[0],s2_min=motorMin[1],s3_min=motorMin[2],s4_min=motorMin[3]):
+	def __init__(self,port="/dev/ttyUSB0",s1=2,s2=1,s3=3,s4=4,dyn_model="RX",s1_min=motorMin[0],s2_min=motorMin[1],s3_min=motorMin[2],s4_min=motorMin[3], abduction_limit =1):
 		#s1: adduction/abduction motor for spread
 		#s2: forward-driving finger
 		#s3: reverse-driving finger
@@ -411,6 +414,7 @@ class Model_O(OpenHand):
 			self.motorMin = mot_offset
 			self.motorMax = [self.motorMin[0]+self.adduct_amount,self.motorMin[1]+self.max_close,self.motorMin[2]+self.max_close,self.motorMin[3]+self.max_close]
 
+		self.abduction_limit = abduction_limit
 		OpenHand.__init__(self,port,[s1,s2,s3,s4],dyn_model)
 
 	def reset(self):

@@ -152,6 +152,7 @@ if __name__=="__main__":
 		series = rospy.get_param('~servo_type')
 		direction = rospy.get_param('~direction')
 		motor_offset = rospy.get_param('~motor_offset',[0.])
+		abduction_limit = rospy.get_param('~abduction_limit',1)
 		if motor_offset == [0.]:
 			motor_offset = [0.] * len(servo_ids)
 
@@ -177,7 +178,7 @@ if __name__=="__main__":
 			if len(servo_ids)!=4:
 				rospy.logerr("ERR: expecting 4 servo ids, got "+repr(len(servo_ids)))
 			try:
-				Hand = hands.Model_O(port,servo_ids[0],servo_ids[1],servo_ids[2],servo_ids[3],series,motor_offset[0],motor_offset[1],motor_offset[2],motor_offset[3] )
+				Hand = hands.Model_O(port,servo_ids[0],servo_ids[1],servo_ids[2],servo_ids[3],series,motor_offset[0],motor_offset[1],motor_offset[2],motor_offset[3], abduction_limit )
 			except:
 				rospy.logerr("ERR: Model O failed to initialize (openhandNode.py)")
 

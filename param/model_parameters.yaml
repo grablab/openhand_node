@@ -38,6 +38,9 @@ servo_port: '/dev/ttyUSB0'
 openhand_type: 'Model_O'
 direction: 1
 motor_offset: [0.0,0.11,0.0,0.15]
+#If you have dynamixel X series, you can change the torque limit of the abduction motor
+abduction_limit: 0.04
+
 
 #------------------------------#
 

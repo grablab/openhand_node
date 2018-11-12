@@ -697,6 +697,12 @@ class Robotis_Servo_X():
         self.in_extended_position_control_mode = False
         return self.enable_torque()
 
+    def enable_current_position_control_mode(self, torque_val = 0.1):
+        self.disable_torque()
+        self.write_address(self.ADDR_DICT["ADDR_OPERATING_MODE"], [5])
+        self.apply_max_torque(torque_val)
+        return self.enable_torque()
+
     #Functionality for negative torque is now different and uses 2's complement
     #for storing register values. This is the same for velocity
     def apply_torque(self,amnt=0.1):
