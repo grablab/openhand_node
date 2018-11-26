@@ -599,7 +599,7 @@ class Model_O(OpenHand):
 
 class Model_T42(OpenHand):
 	servo_speed = 0.25
-
+	max_torque = 1
 	modes = [True, True] #True if in position control
 
 	max_close = 0.75

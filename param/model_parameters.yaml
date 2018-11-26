@@ -32,14 +32,14 @@
 #motor_offset: [0.,0.11,0.13,0.09]
 
 #Model O
-servo_ids: [1,2,3,4]
-servo_type: 'XM'
-servo_port: '/dev/ttyUSB0'
-openhand_type: 'Model_O'
-direction: 1
-motor_offset: [0.0,0.11,0.0,0.15]
-#If you have dynamixel X series, you can change the torque limit of the abduction motor
-abduction_limit: 0.04
+# servo_ids: [1,2,3,4]
+# servo_type: 'XM'
+# servo_port: '/dev/ttyUSB0'
+# openhand_type: 'Model_O'
+# direction: 1
+# motor_offset: [0.,0.15,-0.15,0.25]
+# #If you have dynamixel X series, you can change the torque limit of the abduction motor
+# abduction_limit: 0.04
 
 
 #------------------------------#
@@ -55,13 +55,13 @@ abduction_limit: 0.04
 
 #------------------------------#
 
-#Model T42
-#servo_ids: [0,2]
-#servo_type: 'RX'
-#servo_port: '/dev/ttyUSB0'
-#openhand_type: 'Model_T42'
-#direction: 1
-#motor_offset: [0.,0.]
+# Model T42
+servo_ids: [1,0]
+servo_type: 'RX'
+servo_port: '/dev/ttyUSB0'
+openhand_type: 'Model_T42'
+direction: 1
+motor_offset: [0.09,0.20]
 
 #------------------------------#
 
