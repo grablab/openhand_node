@@ -42,6 +42,7 @@ import sys, optparse
 import math
 import random
 import ctypes
+import numpy as np
 
 from registerDict import *
 import registerDict
@@ -843,12 +844,12 @@ class Robotis_Servo_X():
 ##################################################################################################
 
 #Prints out servo IDs connected to the U2D2 Device. Looks for both protocols
-def find_servos(dyn):
+def find_servos(dyn, search_range = 249):
     ''' Finds all servo IDs on the USB2Dynamixel '''
     print 'Scanning for Servos.'
     servos = []
     dyn.servo_dev.timeout = 0.03  # To make the scan faster
-    for i in xrange(249):
+    for i in xrange(search_range): #default 249
         try:
             s = Robotis_Servo( dyn, i )
             print '\n FOUND A MX/RX SERVO @ ID %d\n' % i
@@ -950,16 +951,33 @@ def recover_servo(dyn):
     ''' Recovers a bricked servo by sending out a global reset to all servos in the chain '''
     raw_input('Make sure only one servo connected to USB2Dynamixel Device [ENTER]')
     raw_input('Connect power to the servo. [ENTER]')
-    input = raw_input('Type in the protocol version, either a 1 or a 2 (RX,MX = 1, XM =2) [ENTER]')
-
+    input = raw_input('Type in the protocol version, either a 1 or a 2 (RX,MX = 1, XM =2) [ENTER]:  ')
     if input == '1':
         recover_protocol1_servo(dyn);
+        print ('... completed for protocol 1')
     elif input == '2':
-        for i in range(1):
-            recover_protocol2_servo(dyn);
-            time.sleep(0.003)
+        recover_protocol2_servo(dyn);
+        time.sleep(0.003)
+        print ('... completed for protocol 2')
     else:
         print '[ERR] You did not input a 1 or a 2'
+
+
+
+def hard_recover_servo(dev_name):
+    ''' Hard recovery of a bricked servo by sending out a global reset to all servos in the chain at all baud rates '''
+    raw_input('Make sure only one servo connected to USB2Dynamixel Device [ENTER]')
+    raw_input('Connect power to the servo. [ENTER]')
+    print ('This may take a while...')
+
+    bauds = np.arange(8000, 250000, 200)
+    for i in list(bauds):
+        dyn = USB2Dynamixel_Device(dev_name, i)
+        recover_protocol1_servo(dyn);
+        time.sleep(0.05)
+        recover_protocol2_servo(dyn);
+        time.sleep(0.05)
+
 
 
 if __name__ == '__main__':
@@ -970,6 +988,8 @@ if __name__ == '__main__':
                  help='Scan the device for servo IDs attached.')
     p.add_option('--recover', action='store_true', dest='recover', default=False,
                  help='Recover from a bricked servo (restores to factory defaults).')
+    p.add_option('--hardRecover', action='store_true', dest='hardRecover', default=False,
+                 help='Hard recover from a bricked servo (restores to factory defaults - hopefully).')
     p.add_option('--ang', action='store', type='float', dest='ang',
                  help='Angle to move the servo to (degrees).')
     p.add_option('--ang_vel', action='store', type='float', dest='ang_vel',
@@ -996,6 +1016,8 @@ if __name__ == '__main__':
         find_servos( dyn )
     if opt.recover:
         recover_servo( dyn )
+    if opt.hardRecover:
+        hard_recover_servo(opt.dev_name)
     if opt.ids:
         change_servo_id(dyn, opt.ids[0],opt.ids[1])
     if opt.mot_ids:
