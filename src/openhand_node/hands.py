@@ -17,8 +17,6 @@ from decimal import Decimal
 	#different encoder limits for each type
 		#motor limits and mov't designated in terms of proportion, not encoder value
 
-act_out0 = []
-act_out1 = []
 
 class OpenHand():
 	dyn = None		#USB2Dynamixel device
@@ -55,6 +53,7 @@ class OpenHand():
 				self.servos.append(Robotis_Servo(self.dyn,servo_id,series))
 			else: #We will be using protocol 2 instead
 				self.servos.append(Robotis_Servo_X(self.dyn,servo_id,series))
+
 			print "Adding servo id "+repr(servo_id)
 			time.sleep(self.pause)
 		for servo in self.servos:
@@ -146,47 +145,18 @@ class OpenHand():
 			print "[ERR] invalid motor index "+repr(index)
 		else:
 			servo = self.servos[index]
-			#print "Now moving servo "+repr(index)
-			if index == 0:
-				offset = 0.0
-			if index == 1:
-				offset = 0.0
-
-			global act_out0, act_out1, act0, act1, enc0, enc1
 
 			if self.motorDir[index]>0:	#normal case
-
-				act0, enc0 = self.readMotor(0)
-				act_out0.append(act0)
-				act1, enc1 = self.readMotor(1)
-				act_out1.append(act1)
-
 				servo.move_to_encoder(int(servo.settings["max_encoder"]*(self.motorMin[index] + amnt*(self.motorMax[index]-self.motorMin[index]))))
-				act0, enc0 = self.readMotor(0)
-				act_out0.append(act0)
-				act1, enc1 = self.readMotor(1)
-				act_out1.append(act1)
-
 			else:				#reverse
-				act0, enc0 = self.readMotor(0)
-				act_out0.append(act0)
-				act1, enc1 = self.readMotor(1)
-				act_out1.append(act1)
-
 				servo.move_to_encoder(int(servo.settings["max_encoder"]*(self.motorMax[index] - amnt*(self.motorMax[index]-self.motorMin[index]))))
-				act0, enc0 = self.readMotor(0)
-				act_out0.append(act0)
-				act1, enc1 = self.readMotor(1)
-				act_out1.append(act1)
 
 			if not self.modes[index]:	#restore position-control mode if necessary - want to register new encoder target first before re-applying system torque
 				self.modes[index] = True
 				servo.apply_max_torque(self.max_torque)
 
 	def getCurrDir(self):
-		global currdir, take_no, act_out0, act_out1
-		act_out0 = []
-		act_out1 = []
+		global currdir, take_no
 		print 'Current directory: '
 		currdir = raw_input()
 		print 'Take number: '
@@ -300,6 +270,7 @@ class OpenHand():
 			print "Temperature: "+repr(servo.read_temperature())
 			print "Target Encoder: "+repr(servo.read_target_encoder())
 			print "Current Encoder: "+repr(servo.read_encoder())
+
 
 #------------------------------------------------------#
 

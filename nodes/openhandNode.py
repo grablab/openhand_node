@@ -4,10 +4,12 @@
 #Yale University
 #Updated 09/2018
 
-
+import openhand_node.syncRW_XMHandler as handler
+import openhand_node.registerDict as registerDict
 import openhand_node.hands as hands
 from openhand_node.srv import *
 import rospy
+
 
 #Communication class for Openhand
 class OpenHandNode():
@@ -18,6 +20,12 @@ class OpenHandNode():
 		self.series = series
 		self.hand = hand
 		self.sRefs = [0.]*len(self.hand.servos)
+		self.syncRW_capabilities = False
+
+		if self.series =='XM' or self.series == 'XH' or self.series == 'X':
+			self.XMHandler = handler.syncRW_XMHandler(self.hand)
+			self.syncRW_capabilities = True
+
 		for i in xrange(len(self.hand.servos)):
 			motor_pos,motor_encoder = self.hand.readMotor(i)
 			self.sRefs[i] = motor_pos
@@ -50,13 +58,17 @@ class OpenHandNode():
 		if len(self.hand.servos)>1 and len(pos_to_move)==1:
 			pos_to_move = len(self.hand.servos) * [pos_to_move[0]]
 
-		#Move each of the motors as desired
-		for i in xrange(len(pos_to_move)):
-			if i < len(self.hand.servos): #just to be safe
-				self.hand.moveMotor(i,pos_to_move[i])
-				self.sRefs[i] = pos_to_move[i]	#store the reference value sent through ROS
-			else:
-				resp.err = 1
+		if self.syncRW_capabilities: #These are XM Motors
+			self.XMHandler.moveXMmotors(pos_to_move, registerDict.X_Series["ADDR_GOAL_POSITION"], 4)
+			self.sRefs = pos_to_move
+		else:
+			#Move each of the motors as desired for protocol1
+			for i in xrange(len(pos_to_move)):
+				if i < len(self.hand.servos): #just to be safe
+					self.hand.moveMotor(i,pos_to_move[i])
+					self.sRefs[i] = pos_to_move[i]	#store the reference value sent through ROS
+				else:
+					resp.err = 1
 		return resp
 
 	def SetOperatingModeCallback(self, req):
@@ -64,10 +76,6 @@ class OpenHandNode():
 		#OW, false will be for Torque control
 		resp = OperatingModeResponse()
 		resp.err = 0
-
-		#if self.series != 'XM' or self.series != 'MX':
-		#	rospy.logwarn('[ERR] Torque control not implemented for this series of actuator')
-		#	resp.err = 1
 
 		#This method really only works for the MX and XM Motors
 		is_pos_control = req.pos_control
@@ -78,7 +86,6 @@ class OpenHandNode():
 				self.hand.servos[servos_to_update[i]].enable_torque_mode()
 			else: #Then enable position control
 				self.hand.servos[servos_to_update[i]].disable_torque_mode()
-
 
 		return resp
 
@@ -137,6 +144,7 @@ class OpenHandNode():
 		resp = ReadTemperatureResponse()
 		resp.temp = temp
 		return resp
+
 
 
 if __name__=="__main__":
