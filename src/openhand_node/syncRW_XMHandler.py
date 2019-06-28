@@ -114,7 +114,9 @@ class syncRW_XMHandler():
             for m in msg:
                 out += chr(m)
             self.dyn.send_serial( out )
-            data = self.receive_reply( reg_size)
+            data = None
+            if reg_size > 0:
+                data = self.receive_reply( reg_size)
         except Exception as inst:
             self.dyn.rel_mutex()
             raise RuntimeError(repr(str(inst)))
