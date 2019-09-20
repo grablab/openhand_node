@@ -1,7 +1,7 @@
-#Yale GrabLab 2018
+#Yale GrabLab 2019
 #Andrew Morgan
 
-#This document serves to provide addresses for both, the RX/MX set and X* dynamixel Series
+#This document serves to provide addresses for both, the RX/MX set and X* Dynamixel Series (Protocol1 and Protocol 2)
 #These addresses will be used in the lib_robotis_mod file in order to read and write values to the dynamixel device.
 
 

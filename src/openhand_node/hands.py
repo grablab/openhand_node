@@ -4,6 +4,7 @@
 #Yale Grablab
 #Updated 09/2019
 
+from __future__ import print_function
 from lib_robotis_mod import *
 import time
 import numpy as np	#for array handling
@@ -46,7 +47,7 @@ class OpenHand():
 		self.servo_ids = servo_ids
 		num_servos = len(servo_ids)
 
-		print "Initializing..."
+		print( "Initializing...")
 		self.servos = []
 		for servo_id in self.servo_ids:
 			if series == "RX" or series =="MX":
@@ -54,7 +55,7 @@ class OpenHand():
 			else: #We will be using protocol 2 instead
 				self.servos.append(Robotis_Servo_X(self.dyn,servo_id,series))
 
-			print "Adding servo id "+repr(servo_id)
+			print( "Adding servo id "+repr(servo_id))
 			time.sleep(self.pause)
 		for servo in self.servos:
 			servo.kill_cont_turn()		#make sure position mode limits are enabled
@@ -67,7 +68,7 @@ class OpenHand():
 		self.modes = [True]*num_servos		#default assignment (shouldn't have servos in torque mode during normal operation)
 
 		if len(self.motorDir)!=num_servos or len(self.motorMin)!=num_servos or len(self.motorMax)!=num_servos:
-			print "[ERR] Servo number mismatch, resetting motor limits"
+			print( "[ERR] Servo number mismatch, resetting motor limits")
 			self.motorDir = [1]*num_servos
 			self.motorMin = [self.amnt_release]*num_servos
 			self.motorMax = [self.amnt_close]*num_servos
@@ -77,46 +78,46 @@ class OpenHand():
 				enc = self.servos[i].read_encoder()
 				if series == "RX":
 					if (self.motorDir[i] ==1 and enc > 512) or (self.motorDir[i] == -1 and enc < 512):
-						print "------------FAILSAFE-------------"
-						print "Failsafe is incorporated to prevent gear shear in Model O"
-						print "Motor encoder postion: ", enc
+						print( "------------FAILSAFE-------------")
+						print( "Failsafe is incorporated to prevent gear shear in Model O")
+						print( "Motor encoder postion: ", enc)
 						input = raw_input("Your encoder position for motor index " + str(i) + " may cause the motor to move backwards and break gears. We recommend you resetting the fingers to prevent gear shear, proceed? [ENTER]")
 					else:
-						print "Motor directions not set..."
+						print( "Motor directions not set...")
 				#These would then be the MX and XM motors
 				elif (self.motorDir[i] ==1 and enc > 2048) or (self.motorDir[i] == -1 and enc < 2048):
-					print "------------FAILSAFE-------------"
-					print "Failsafe is incorporated to prevent gear shear in Model O"
-					print "Motor encoder postion: ", enc
+					print( "------------FAILSAFE-------------")
+					print( "Failsafe is incorporated to prevent gear shear in Model O")
+					print( "Motor encoder postion: ", enc)
 					input = raw_input("As an XM Motor, we can automatically fix this issue for motor " + str(i) + ", proceed? [ENTER]")
 					self.servos[i].enable_extended_position_control_mode()
 					self.servos[i].move_to_encoder(self.servos[i].settings['max_encoder']+100)
 					time.sleep(self.pause)
 					self.servos[i].disable_extended_position_control_mode()
 					time.sleep(self.pause)
-					print "Fixed servo from ID: "+repr(servo_ids[i])
+					print( "Fixed servo from ID: "+repr(servo_ids[i]))
 			#Finally, limit the abduction_torque if desired
 			if self.abduction_limit !=1:
 				self.servos[0].enable_current_position_control_mode(self.abduction_limit)
 
 		time.sleep(self.pause)
 		self.reset()
-		print "Initialization Complete."
+		print( "Initialization Complete.")
 
 	def reset(self):	#returns everything to zeroed positions, different from release
-		print "[ERR] reset() not implemented"
+		print( "[ERR] reset() not implemented")
 		return False
 
 	def release(self):	#opens the finger components, doesn't necessarily move non-finger servos
-		print "[ERR] release() not implemented\n"
+		print( "[ERR] release() not implemented\n")
 		return False
 	#close functions are normalized regardless of mode such that the operating range [0,1.0] makes sense
 	def close(self,amnt=0.5):
-		print "[ERR] close() not implemented\n"
+		print( "[ERR] close() not implemented\n")
 		return False
 	#tval: torque applied to servos, dpos: delta position overshoot beyond current
 	def close_torque(self,tval=0.2,dpos=1.0):
-		print "[ERR] close_torque() not implemented\n"
+		print( "[ERR] close_torque() not implemented\n")
 		return False
 	#difference between close_torque should just be the particular servos that are actuated
 	def _close_torques(self,tval=0.2,dpos=1.0,idxs=None):
@@ -139,10 +140,10 @@ class OpenHand():
 	#move servo according to amnt, not encoder value, scaled between designated min/max values
 	def moveMotor(self,index,amnt):
 		if amnt < 0. or amnt > 1.0:
-			print "[WARNING] motion out of bounds, capping to [0,1]. Index: "+repr(index)+", Cmd:"+repr(amnt)
+			print( "[WARNING] motion out of bounds, capping to [0,1]. Index: "+repr(index)+", Cmd:"+repr(amnt))
 		amnt = min(max(amnt,0.),1.0)
 		if (index < 0 or index >= len(self.servos)):
-			print "[ERR] invalid motor index "+repr(index)
+			print( "[ERR] invalid motor index "+repr(index))
 		else:
 			servo = self.servos[index]
 
@@ -157,9 +158,9 @@ class OpenHand():
 
 	def getCurrDir(self):
 		global currdir, take_no
-		print 'Current directory: '
+		print( 'Current directory: ')
 		currdir = raw_input()
-		print 'Take number: '
+		print( 'Take number: ')
 		take_no = raw_input()
 
 
@@ -178,9 +179,9 @@ class OpenHand():
 
 	def moveHand(self,vals):
 		if len(vals)!=len(self.servos):
-			print "[ERR] Motor number mismatch"
+			print( "[ERR] Motor number mismatch")
 		else:
-			for i in xrange(len(vals)):
+			for i in range(len(vals)):
 				self.moveMotor(i,vals[i])
 
 	#returns motor position amnt, between designated min and max values
@@ -196,23 +197,23 @@ class OpenHand():
 
 	def readLoads(self):
 		for servo in self.servos:
-			print "---"
-			print "Servo ID: "+repr(servo.servo_id)
-			print "Load: "+repr(servo.read_load())
+			print( "---")
+			print( "Servo ID: "+repr(servo.servo_id))
+			print( "Load: "+repr(servo.read_load()))
 
 	def readMotorMins(self):
 		index=0
 		for servo in self.servos:
-			print "---"
-			print "Servo ID: "+repr(servo.servo_id)
-			print "Motor Mins: "+ repr(self.motorMin[index])
+			print( "---")
+			print( "Servo ID: "+repr(servo.servo_id))
+			print( "Motor Mins: "+ repr(self.motorMin[index]))
 			index=index+1
 
 	def readHand(self):
 		amnts = np.array([0.]*len(self.servos))
 		encs = np.array([0]*len(self.servos))
 
-		for i in xrange(len(self.servos)):
+		for i in range(len(self.servos)):
 			amnt,enc = self.readMotor(i)
 			amnts[i] = amnt
 			encs[i] = enc
@@ -264,12 +265,12 @@ class OpenHand():
 
 	def diagnostics(self):
 		for servo in self.servos:
-			print "---"
-			print "Servo ID: "+repr(servo.servo_id)
-			print "Load: "+repr(servo.read_load())
-			print "Temperature: "+repr(servo.read_temperature())
-			print "Target Encoder: "+repr(servo.read_target_encoder())
-			print "Current Encoder: "+repr(servo.read_encoder())
+			print( "---")
+			print( "Servo ID: "+repr(servo.servo_id))
+			print( "Load: "+repr(servo.read_load()))
+			print( "Temperature: "+repr(servo.read_temperature()))
+			print( "Target Encoder: "+repr(servo.read_target_encoder()))
+			print( "Current Encoder: "+repr(servo.read_encoder()))
 
 
 #------------------------------------------------------#
@@ -301,7 +302,7 @@ class GR2(OpenHand):
 		self.moveMotor(1,amnt)
 	#replacement for preventAllLoadErrors() due to servo state constraints
 	def hold(self):
-		for i in xrange(2):
+		for i in range(2):
 			amnt,enc = self.readMotor(i)
 			self.moveMotor(i,amnt)	#accounts for possible transition from torque mode
 	#tval: torque value
@@ -341,13 +342,13 @@ class GR2(OpenHand):
 		while i<10:		#arbitrary step count to 10 as system settles
 			s_val,s_enc = self.readMotor(index)
 			s_val_err = abs(s_val-val)
-			print "Shifting error: "+repr(round(s_val_err,4))
+			print( "Shifting error: "+repr(round(s_val_err,4)))
 			if s_val_err<0.01:
 				break
 			time.sleep(self.pause)
 			i+=1
 
-		print "Final shift error: "+repr(round(s_val_err,4))
+		print( "Final shift error: "+repr(round(s_val_err,4)))
 		self.hold()
 		return s_val_err
 
@@ -381,7 +382,7 @@ class Model_O(OpenHand):
 		mot_offset = [s1_min,s2_min,s3_min,s4_min]
 
 		if(mot_offset != self.motorMin):  #update motor mins if initialized to different values
-			print 'Setting new motor minimums... '
+			print( 'Setting new motor minimums... ')
 			self.motorMin = mot_offset
 			self.motorMax = [self.motorMin[0]+self.adduct_amount,self.motorMin[1]+self.max_close,self.motorMin[2]+self.max_close,self.motorMin[3]+self.max_close]
 
@@ -410,7 +411,7 @@ class Model_O(OpenHand):
 
 	def change_motor_min(self,index, val):
 		if (index < 0 or index >= len(self.servos)):
-			print "[ERR] invalid motor index "+repr(index)
+			print( "[ERR] invalid motor index "+repr(index))
 		else:
 			if (index >0):
 				self.motorMin[index]=val
@@ -419,7 +420,7 @@ class Model_O(OpenHand):
 				self.motorMin[index]=val
 				self.motorMax[index]=val+0.5
 			self.reset()
-			print 'Index changed successfully...'
+			print( 'Index changed successfully...')
 
 	#abduct/adduct fingers - if no param given, move to power grasp
 	def adduct(self,amnt=1):
@@ -430,7 +431,7 @@ class Model_O(OpenHand):
 		adduct_loc, enc = self.readHand()
 		if(adduct_loc[0] > 0.05):
 			self.reset()
-                	time.sleep(1.5) #pause for 1.5 seconds to allow reset
+			time.sleep(1.5) #pause for 1.5 seconds to allow reset
 		self.moveMotor(1,amnt)
 		self.moveMotor(2,amnt)
 
@@ -439,17 +440,17 @@ class Model_O(OpenHand):
 		adduct_loc, enc = self.readHand()
 		if(adduct_loc[0] < 0.95):
 			self.release()
-                	time.sleep(1) #pause for 1 second to allow release
-                	self.adduct(1)  #move fingers facing thumb
-                	time.sleep(1)
+			time.sleep(1) #pause for 1 second to allow release
+			self.adduct(1)  #move fingers facing thumb
+			time.sleep(1)
 		self.close(amnt)
 
     	#Example why torque control is required for fingertip manipulation
 	def pinch_object_move(self,delta_amnt=0.03, left=True, down = False): #These cannot be the same or else we will move diagonal
 		adduct_loc, enc = self.readHand()
 		if(adduct_loc[0] > 0.05):
-			print '[ERR] Hand is not in a pinch grasp'
-              		return
+			print( '[ERR] Hand is not in a pinch grasp')
+			return
 		else:
 			locs, enc = self.readHand()
 			if left==True and down == False:		#move left
@@ -498,7 +499,7 @@ class Model_O(OpenHand):
 	#shifts object to the edge of the workspace
 	def shift(self,index,val, wait_range=None):
 		if index != 1 and index !=2:
-			print "[ERR] Can only shift using power grasp with opposing fingers 1 and 2"
+			print( "[ERR] Can only shift using power grasp with opposing fingers 1 and 2")
 			return
 
 		other_index=1
@@ -523,7 +524,7 @@ class Model_O(OpenHand):
 				break
 			time.sleep(self.pause)
 
-		print "Final shift error: "+repr(round(abs(val-s_val),4))
+		print( "Final shift error: "+repr(round(abs(val-s_val),4)))
 		self.hold()
 		return s_val_err
 
@@ -531,7 +532,7 @@ class Model_O(OpenHand):
 	def sweep(self,val=None):
 		adduct_loc, enc = self.readHand()
 		if(adduct_loc[0] > 0.05):
-			print '[ERR] Hand must be in pinch_close mode before sweep'
+			print( '[ERR] Hand must be in pinch_close mode before sweep')
 			return
 
 		amnts,encs = self.readHand() #record starting pose to return to
@@ -547,20 +548,20 @@ class Model_O(OpenHand):
 		time.sleep(0.5)
 		self.shift(1,amnts[1],10)
 		time.sleep(self.pause)
-		print "Sweep Completed.."
+		print( "Sweep Completed..")
 
 	#jiggling the fingers closed
 	def close_jiggle(self,amnt=0.5,da=0.05,nsteps=5,pause=0.25):
 		amnt_start,amnt_enc = self.readHand()
 		s_amnt = amnt_start[0]
 		if s_amnt<0.5:
-			print "[WARNING] Fingers may be spread too far apart for closing motion"
-                        print "Consider moving fingers to adduction value of greater than 0.5"
+			print( "[WARNING] Fingers may be spread too far apart for closing motion")
+			print( "Consider moving fingers to adduction value of greater than 0.5")
 
 		amnt_goal = np.array([amnt,amnt,amnt,s_amnt])
 		da_arr = np.array([da,-da,0.,0.])
-		for i in xrange(nsteps):
-                        amnt_curr=self.readHand()
+		for i in range(nsteps):
+			amnt_curr=self.readHand()
 			amnt_arr = amnt_start+(amnt_goal-amnt_curr)*float(i)/nsteps+da_arr*(-1)**i
 
 			self.moveHand(amnt_arr)
@@ -587,7 +588,7 @@ class Model_T42(OpenHand):
 		mot_offset = [s1_min,s2_min]
 
 		if(mot_offset != self.motorMin):  #update motor mins if initialized to different values
-			print 'Setting new motor minimums... '
+			print( 'Setting new motor minimums... ')
 			self.motorMin = mot_offset
 			self.motorMax = [self.motorMin[0]+self.max_close,self.motorMin[1]+self.max_close]
 
@@ -612,8 +613,8 @@ class Model_T42(OpenHand):
 
 		for i in range(len(act1inputs)):
 			time.sleep(0.25)
-			print "thumb: %.2f" % Decimal(act1inputs[i]*(0.50-0.15)+0.05)
-			print "2-link: %.2f" % Decimal(act2inputs[i]*(0.65-0.10)+0.05)
+			print( "thumb: %.2f" % Decimal(act1inputs[i]*(0.50-0.15)+0.05))
+			print( "2-link: %.2f" % Decimal(act2inputs[i]*(0.65-0.10)+0.05))
 			self.moveMotor(1,act1inputs[i]*(0.50-0.15)+0.) #1 link
 
 			time.sleep(0.05)
@@ -785,13 +786,13 @@ class Model_T42(OpenHand):
 		while i < 10:  # arbitrary step count to 10 as system settles
 			s_val, s_enc = self.readMotor(index)
 			s_val_err = abs(s_val - val)
-			print "Shifting error: " + repr(round(s_val_err, 4))
+			print( "Shifting error: " + repr(round(s_val_err, 4)))
 			if s_val_err < 0.01:
 				break
 			time.sleep(self.pause)
 			i += 1
 
-		print "Final shift error: " + repr(round(s_val_err, 4))
+		print( "Final shift error: " + repr(round(s_val_err, 4)))
 		self.hold()
 		return s_val_err
 
@@ -813,7 +814,7 @@ class Model_T(OpenHand):
 
 		mot_offset = [s1_min]
 		if(mot_offset != self.motorMin):  #update motor mins if initialized to different values
-			print 'Setting new motor minimums... '
+			print( 'Setting new motor minimums... ')
 			self.motorMin = mot_offset
 			self.motorMax = [self.motorMin[0]+self.max_close]
 
@@ -831,7 +832,7 @@ class Model_T(OpenHand):
 		i,sp = 0,1.
 		while i<self.limit_close and sp>0:
 			sp = self.servos[0].read_speed()
-			print "close (speed): "+repr(sp)
+			print( "close (speed): "+repr(sp))
 			i += 1
 			time.sleep(self.pause)
 
@@ -849,7 +850,7 @@ class Model_T(OpenHand):
 		i,sp = 0,1.
 		while i<self.limit_close and sp>0:
 			sp = self.servos[0].read_speed()
-			print "close (speed): "+repr(sp)
+			print( "close (speed): "+repr(sp))
 			i += 1
 			time.sleep(self.pause)
 
@@ -867,7 +868,7 @@ class Model_T(OpenHand):
 		i,sp = 0,1.
 		while i<self.limit_close and sp>0:
 			sp = self.servos[0].read_speed()
-			print "close (speed): "+repr(sp)
+			print( "close (speed): "+repr(sp))
 			i += 1
 			time.sleep(self.pause)
 

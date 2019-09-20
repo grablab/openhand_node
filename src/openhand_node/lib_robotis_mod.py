@@ -32,17 +32,19 @@
 ## Authors: Travis Deyle, Advait Jain & Marc Killpack (Healthcare Robotics Lab, Georgia Tech.)
 
 ##MOD VERSION: 2013, some additional modifications made to make appropriate for both MX/RX series (Raymond R. Ma)
-##MOD VERSION: 2018, additions for python3, searching for dynamixels, and readdressing now available (Andrew Morgan)
+##MOD VERSION: 2018,2019, additions for python3, searching for dynamixels, and readdressing now available (Andrew Morgan)
 ##                   Additional Changes for Robotis_Servo_X for all readings of new dynamixels.
 
+from __future__ import print_function
 import serial
 import time
-import thread
+import _thread
 import sys, optparse
 import math
 import random
 import ctypes
 import numpy as np
+import IPython
 
 from registerDict import *
 import registerDict
@@ -57,7 +59,7 @@ class USB2Dynamixel_Device():
         except:
             self.dev_name = dev_name # stores it as a /dev-mapped string for Linux / Mac
 
-        self.mutex = thread.allocate_lock()	#helps ensure that only a single port is used?
+        self.mutex = _thread.allocate_lock()	#helps ensure that only a single port is used?
         self.servo_dev = None
 
         self.acq_mutex()
@@ -73,7 +75,9 @@ class USB2Dynamixel_Device():
     def send_serial(self, msg):
         # It is up to the caller to acquire / release mutex
         self.servo_dev.flushInput()		#added to remove extra bytes from input buffer
-        sent = self.servo_dev.write( msg )
+        byte_msg = bytearray(msg)
+        sent = self.servo_dev.write(byte_msg)
+
 
     def read_serial(self, nBytes=1):
         # It is up to the caller to acquire / release mutex
@@ -93,7 +97,7 @@ class USB2Dynamixel_Device():
             self.servo_dev.flushOutput()
             self.servo_dev.flushInput()
 
-        except (serial.serialutil.SerialException), e:
+        except (serial.serialutil.SerialException) as e:
             raise RuntimeError('lib_robotis: Serial port not found!\n')
         if(self.servo_dev == None):
             raise RuntimeError('lib_robotis: Serial port not found!\n')
@@ -151,6 +155,7 @@ class Robotis_Servo():
 
         # ID exists on bus?
         self.servo_id = servo_id
+
         try:
             self.read_address(self.ADDR_DICT["ADDR_ID"])
         except Exception as inst:
@@ -163,13 +168,13 @@ class Robotis_Servo():
 
         self.settings = {}
         #removed external servo settings file to simplify things (we usually only deal with MX or RX, and both settings are included above)
-
         # Set to default any parameter not specified in servo_config
         for key in defaults.keys():
-            if self.settings.has_key( key ):
+            if key in self.settings: ##CHANGED self.settings.has_key( key ) THIS SHOULD ALSO WORK IN PYTHON2
                 pass
             else:
                 self.settings[ key ] = defaults[ key ]	#defaults dict moved into settings component
+
 
     def init_cont_turn(self):
         '''sets CCW angle limit to zero and allows continuous turning (good for wheels).
@@ -184,7 +189,7 @@ class Robotis_Servo():
         '''resets CCW angle limits to allow commands through 'move_angle' again
         '''
         max_encoder = self.settings['max_encoder']
-        hi,lo = max_encoder / 256, max_encoder % 256	#addition made to reset encoder appropriately for both series
+        hi,lo = int(max_encoder / 256), int(max_encoder % 256)	#addition made to reset encoder appropriately for both series
         self.write_address(self.ADDR_DICT["ADDR_CCW_ANGLE_LIMIT_L"], [lo,hi])
 
     def is_moving(self):
@@ -240,7 +245,7 @@ class Robotis_Servo():
         speed_val = int(amnt*1023)
         if speed_val < 0:
             speed_val = speed_val+1024
-        hi,lo = speed_val / 256, speed_val % 256
+        hi,lo = int(speed_val / 256), int(speed_val % 256)
         self.write_address(self.ADDR_DICT["ADDR_MOVING_SPEED_L"],[lo,hi])
 
     def read_encoder(self):
@@ -273,7 +278,7 @@ class Robotis_Servo():
         amnt = max(0.,min(abs(val),1.0))
         n = int(amnt*1023)
         n = min(max(n,0), 1023)		#no scaling issues between MX and RX like with position
-        hi,lo = n / 256, n % 256
+        hi,lo = int(n / 256), int(n % 256)
         self.write_address( 0x22, [lo,hi])
         return self.write_address( self.ADDR_DICT["ADDR_MAX_TORQUE_L"], [lo,hi])
 
@@ -285,13 +290,13 @@ class Robotis_Servo():
             angvel = self.settings['max_speed']
 
         if angvel > self.settings['max_speed']:
-            print 'lib_robotis.move_angle: angvel too high - %.2f deg/s' % (math.degrees(angvel))
-            print 'lib_robotis.ignoring move command.'
+            print( 'lib_robotis.move_angle: angvel too high - %.2f deg/s' % (math.degrees(angvel)))
+            print( 'lib_robotis.ignoring move command.')
             return
 
         if ang > self.settings['max_ang'] or ang < self.settings['min_ang']:
-            print 'lib_robotis.move_angle: angle out of range- ', math.degrees(ang)
-            print 'lib_robotis.ignoring move command.'
+            print( 'lib_robotis.move_angle: angle out of range- ', math.degrees(ang))
+            print( 'lib_robotis.ignoring move command.')
             return
 
         self.set_angvel(angvel)
@@ -312,7 +317,7 @@ class Robotis_Servo():
         # In some border cases, we can end up above/below the encoder limits.
         #   eg. int(round(math.radians( 180 ) / ( math.radians(360) / 0xFFF ))) + 0x7FF => -1
         n = min( max( n, 0 ), self.settings['max_encoder'] )
-        hi,lo = n / 256, n % 256
+        hi,lo = int(n / 256), int(n % 256)
         return self.write_address( self.ADDR_DICT["ADDR_GOAL_POSITION_L"], [lo,hi] )
 
     #ADDED: reading the goal encoder position that the user has specified
@@ -339,7 +344,7 @@ class Robotis_Servo():
             torque_val = int(amnt*1023)
             if torque_val < 0:
                 torque_val = torque_val+1024
-            hi,lo = torque_val / 256, torque_val % 256
+            hi,lo = int(torque_val / 256), int(torque_val % 256)
             return self.write_address(self.ADDR_DICT["ADDR_GOAL_TORQUE_L"],[lo,hi])
         else:
             return 0
@@ -360,9 +365,9 @@ class Robotis_Servo():
         rpm = angvel / (2 * math.pi) * 60.0
         angvel_enc = int(round( rpm / 0.111 ))
         if angvel_enc<0:
-            hi,lo = abs(angvel_enc) / 256 + 4, abs(angvel_enc) % 256
+            hi,lo = int(abs(angvel_enc) / 256 + 4), int(abs(angvel_enc) % 256)
         else:
-            hi,lo = angvel_enc / 256, angvel_enc % 256
+            hi,lo = int(angvel_enc / 256),int( angvel_enc % 256)
 
         return self.write_address( self.ADDR_DICT["ADDR_MOVING_SPEED_L"], [lo,hi] )
 
@@ -388,6 +393,7 @@ class Robotis_Servo():
         msg = [ 0x02, address, nBytes ]
         return self.send_instruction( msg, self.servo_id )
 
+
     def write_address(self, address, data):
         ''' writes data at the address.
             data = [n1,n2 ...] list of numbers.
@@ -402,7 +408,6 @@ class Robotis_Servo():
         msg = [ id, len(instruction) + 1 ] + instruction # instruction includes the command (1 byte + parameters. length = parameters+2)
         chksum = self.__calc_checksum( msg )
         msg = [ 0xff, 0xff ] + msg + [chksum]
-
         self.dyn.acq_mutex()
         try:
             self.send_serial( msg )
@@ -427,24 +432,26 @@ class Robotis_Servo():
         while servo_id=='\xff':
             servo_id = self.dyn.read_serial( 1 )	#on Sparkfun USB-to-RS485 chip, more than 3 header bytes are sometimes set - apparently not an issue with the USB2Dynamixel
 
-        if type(servo_id) is not str or len(servo_id)!=1:
+        if len(servo_id)!=1:
             raise RuntimeError('lib_robotis: Invalid message headers, got servo id of type: '+repr(type(servo_id))+' and length: '+repr(len(servo_id)))
         if ord(servo_id) != self.servo_id:
             raise RuntimeError('lib_robotis: Incorrect servo ID received')
+
         data_len = self.dyn.read_serial( 1 )
         err = self.dyn.read_serial( 1 )
-        data = self.dyn.read_serial( ord(data_len) - 2 )
-        checksum = self.dyn.read_serial( 1 ) 		#checksum is read but never compared...(by design, according to original lib_robotis.py)
-        return [ord(v) for v in data], ord(err)
 
+        data=[]
+        for i in range(ord(data_len)-2):
+            input = self.dyn.read_serial( 1 )
+            data.append(ord(input))
+
+        checksum = self.dyn.read_serial( 1 ) 		#checksum is read but never compared...(by design, according to original lib_robotis.py)
+        return data, ord(err)
 
     def send_serial(self, msg):
         """ sends the command to the servo
         """
-        out = ''
-        for m in msg:
-            out += chr(m)
-        self.dyn.send_serial( out )
+        self.dyn.send_serial( msg )
 
 ##################################################################################################
 
@@ -482,7 +489,7 @@ class Robotis_Servo_X():
             self.ADDR_DICT = registerDict.X_Series
 
         except Exception as inst:
-            print "Could not intialize X series series servo. Please make sure you have your series set to ''X'' "
+            print( "Could not intialize X series series servo. Please make sure you have your series set to ''X'' ")
 
         # Error Checking
         if USB2Dynamixel == None:
@@ -494,7 +501,6 @@ class Robotis_Servo_X():
         # ID exists on bus?
         self.servo_id = servo_id
 
-        print self.read_address(self.ADDR_DICT["ADDR_ID"])
         try:
             self.read_address(self.ADDR_DICT["ADDR_ID"])
         except Exception as inst:
@@ -510,10 +516,11 @@ class Robotis_Servo_X():
 
         # Set to default any parameter not specified in servo_config
         for key in defaults.keys():
-            if self.settings.has_key( key ):
+            if key in self.settings: ##CHANGED self.settings.has_key( key ) THIS SHOULD ALSO WORK IN PYTHON2
                 pass
             else:
                 self.settings[ key ] = defaults[ key ]	#defaults dict moved into settings component
+
 
         #We will do this initially so that we will enable torque
         self.enable_position_mode()
@@ -613,7 +620,7 @@ class Robotis_Servo_X():
         amnt = max(0.,min(abs(val),1.0))
         n = int(amnt*648)
         n = min(max(n,0), 648)		#no scaling issues between MX and RX like with position
-        hi,lo = n / 256, n % 256
+        hi,lo = int(n / 256), int(n % 256)
         #Disble the torque first in order to change
         self.disable_torque()
         self.write_address( self.ADDR_DICT["ADDR_CURRENT_LIMIT"], [lo,hi])
@@ -627,13 +634,13 @@ class Robotis_Servo_X():
             angvel = self.settings['max_speed']
 
         if angvel > self.settings['max_speed']:
-            print 'lib_robotis.move_angle: angvel too high - %.2f deg/s' % (math.degrees(angvel))
-            print 'lib_robotis.ignoring move command.'
+            print( 'lib_robotis.move_angle: angvel too high - %.2f deg/s' % (math.degrees(angvel)))
+            print( 'lib_robotis.ignoring move command.')
             return
 
         if ang > self.settings['max_ang'] or ang < self.settings['min_ang']:
-            print 'lib_robotis.move_angle: angle out of range- ', math.degrees(ang)
-            print 'lib_robotis.ignoring move command.'
+            print( 'lib_robotis.move_angle: angle out of range- ', math.degrees(ang))
+            print( 'lib_robotis.ignoring move command.')
             return
 
         self.set_angvel(angvel)
@@ -656,10 +663,10 @@ class Robotis_Servo_X():
         #   eg. int(round(math.radians( 180 ) / ( math.radians(360) / 0xFFF ))) + 0x7FF => -1
         if self.in_extended_position_control_mode == False:
             n = min( max( n, 0 ), self.settings['max_encoder'] )
-            hi,lo = n / 256, n % 256
+            hi,lo = int(n / 256), int(n % 256)
         else:
             n = twos_comp_forward(n,16)
-            hi,lo = (n >>8) & 0xff, n & 0xff
+            hi,lo = int((n >>8) & 0xff), int(n & 0xff)
         return self.write_address( self.ADDR_DICT["ADDR_GOAL_POSITION"], [lo,hi,0,0] )
 
     #ADDED: reading the goal encoder position that the user has specified
@@ -710,7 +717,7 @@ class Robotis_Servo_X():
         amnt = max(-1.,min(amnt,1.0))
         torque_val = int(amnt*648.) #note that 648 is the upper limit on the what we can set
         torque_val = twos_comp_forward(torque_val,16)
-        hi,lo = (torque_val >>8) & 0xff, torque_val & 0xff
+        hi,lo = int((torque_val >>8) & 0xff), int(torque_val & 0xff)
         return self.write_address(self.ADDR_DICT["ADDR_GOAL_CURRENT"],[lo,hi])
 
     #disabling/enabling address 18 effectively shuts down motor output
@@ -738,8 +745,8 @@ class Robotis_Servo_X():
         '''
         #Must disable torque to write id (at all)
         #Note, you should only do this individually
-        print self.disable_torque()
-        print self.write_address( self.ADDR_DICT["ADDR_ID"], [id] )
+        print( self.disable_torque())
+        print( self.write_address( self.ADDR_DICT["ADDR_ID"], [id] ))
         return
 
     def read_id(self):
@@ -755,9 +762,9 @@ class Robotis_Servo_X():
         msg = [self.servo_id, 3, 0, 0x1]
         resp = self.send_instruction(msg,self.servo_id)
         if len(resp) >0:
-            print "PING to actuator successful!"
+            print( "PING to actuator successful!")
         else:
-            print "PING to actuator failed"
+            print( "PING to actuator failed")
 
     def read_address(self, address, nBytes=1):
         ''' reads nBytes from address on the servo.
@@ -806,10 +813,11 @@ class Robotis_Servo_X():
         start = self.dyn.read_serial( 2 )	#from pydynamixel: possible that these contain empty bytes
 
         servo_id = self.dyn.read_serial( 1 )
-        while servo_id=='\xfd' or servo_id=='\xff' or servo_id=='\x00':
+
+        while str(servo_id)=='\xfd' or str(servo_id)=='\xff' or str(servo_id)=='\x00' or str(servo_id)=="b'\\xfd'" or str(servo_id)=="b'\\xff'" or str(servo_id)=="b'\\x00'":
             servo_id = self.dyn.read_serial( 1 )	#on Sparkfun USB-to-RS485 chip, more than 3 header bytes are sometimes set - apparently not an issue with the USB2Dynamixel
 
-        if type(servo_id) is not str or len(servo_id)!=1:
+        if len(servo_id)!=1:
             raise RuntimeError('lib_robotis: Invalid message headers, got servo id of type: '+repr(type(servo_id))+' and length: '+repr(len(servo_id)))
         if ord(servo_id) != self.servo_id:
             raise RuntimeError('lib_robotis: Incorrect servo ID received')
@@ -818,23 +826,21 @@ class Robotis_Servo_X():
         INST = self.dyn.read_serial( 1 )
         err = self.dyn.read_serial( 1 )
         data=[]
-        for i in xrange(ord(message_length_low)-4):
+        for i in range(ord(message_length_low)-4):
             input = self.dyn.read_serial( 1 )
-            #print ord(input)
             data.append(ord(input))
 
         crc16_low = self.dyn.read_serial( 1 )
         crc16_high = self.dyn.read_serial( 1 )
+
         return data, ord(err)
 
 
     def send_serial(self, msg):
         """ sends the command to the servo
         """
-        out = ''
-        for m in msg:
-            out += chr(m)
-        self.dyn.send_serial( out )
+        self.dyn.send_serial( msg )
+
 
 
 ##################################################################################################
@@ -843,21 +849,21 @@ class Robotis_Servo_X():
 
 ##################################################################################################
 
-#Prints out servo IDs connected to the U2D2 Device. Looks for both protocols
+#print(s out servo IDs connected to the U2D2 Device. Looks for both protocols
 def find_servos(dyn, search_range = 249):
     ''' Finds all servo IDs on the USB2Dynamixel '''
-    print 'Scanning for Servos.'
+    print( 'Scanning for Servos.')
     servos = []
     dyn.servo_dev.timeout = 0.03  # To make the scan faster
-    for i in xrange(search_range): #default 249
+    for i in range(search_range): #default 249
         try:
             s = Robotis_Servo( dyn, i )
-            print '\n FOUND A MX/RX SERVO @ ID %d\n' % i
+            print( '\n FOUND A MX/RX SERVO @ ID %d\n' % i)
             servos.append( i )
         except:
             try:
                 s = Robotis_Servo_X( dyn, i )
-                print '\n FOUND AN X_SERVO @ ID %d\n' % i
+                print( '\n FOUND AN X_SERVO @ ID %d\n' % i)
                 servos.append( i )
             except:
                 pass
@@ -867,7 +873,7 @@ def find_servos(dyn, search_range = 249):
 #Changes ID of the specified motor in the daisy chain. Motor will need
 #to be reset after ID change
 def change_servo_id(dyn, prev_id, new_id):
-    print 'Changing servo id...'
+    print( 'Changing servo id...')
     try:
         s=Robotis_Servo(dyn, prev_id) #ensure we are changing the right one
         notlowByte = ~((254+4+3+3+new_id)%256)
@@ -876,15 +882,15 @@ def change_servo_id(dyn, prev_id, new_id):
         for i in vals_char:
         	dyn.send_serial(i)
         s_new=Robotis_Servo(dyn, new_id)
-        print 'Servo ID for RX/MX changed successfully'
+        print( 'Servo ID for RX/MX changed successfully')
     except:
         try:
             s=Robotis_Servo_X(dyn, prev_id) #ensure we are changing the right one
             s.write_id(new_id)
             s_new = s=Robotis_Servo_X(dyn, new_id)
-            print 'Servo ID for X series changed successfully'
+            print( 'Servo ID for X series changed successfully')
         except:
-            print 'Servo ID change failed. Please check to ensure --setID <prev_id> <new_id>'
+            print( 'Servo ID change failed. Please check to ensure --setID <prev_id> <new_id>')
             pass
     return
 
@@ -892,7 +898,7 @@ def change_servo_id(dyn, prev_id, new_id):
 #actuator ids, e.g. --moveTest "1 4 5 6"
 def move_servos_test(dyn, ids, encoder_pos = None): #ids is a list of integers
     ''' Move the servos specified in the function call '''
-    print 'Moving servos to a different (random) position...'
+    print( 'Moving servos to a different (random) position...')
     servos = []
     dyn.servo_dev.timeout = 0.03  # To make the scan faster
     if encoder_pos == None:
@@ -902,18 +908,18 @@ def move_servos_test(dyn, ids, encoder_pos = None): #ids is a list of integers
         try:
             s = Robotis_Servo( dyn, i )
             s.move_to_encoder(encoder_pos)
-            print '\n MOVED MOTOR TO ENCODER POSITION ' ,encoder_pos, '@ ID ',i
+            print( '\n MOVED MOTOR TO ENCODER POSITION ' ,encoder_pos, '@ ID ',i)
             servos.append( i )
             time.sleep(0.03)
         except:
             try:
                 s = Robotis_Servo_X( dyn, i )
                 s.move_to_encoder(encoder_pos)
-                print '\n MOVED MOTOR TO ENCODER POSITION ' ,encoder_pos, '@ ID ',i
+                print( '\n MOVED MOTOR TO ENCODER POSITION ' ,encoder_pos, '@ ID ',i)
                 servos.append( i )
                 time.sleep(0.03)
             except:
-                print 'DID NOT CONNECT AND MOVE MOTOR TO ENCODER POSITION',encoder_pos,' @ ID ',i
+                print( 'DID NOT CONNECT AND MOVE MOTOR TO ENCODER POSITION',encoder_pos,' @ ID ',i)
     dyn.servo_dev.timeout =  1.0  # Restore to original
     return servos
 
@@ -954,13 +960,13 @@ def recover_servo(dyn):
     input = raw_input('Type in the protocol version, either a 1 or a 2 (RX,MX = 1, XM =2) [ENTER]:  ')
     if input == '1':
         recover_protocol1_servo(dyn);
-        print ('... completed for protocol 1')
+        print( ('... completed for protocol 1'))
     elif input == '2':
         recover_protocol2_servo(dyn);
         time.sleep(0.003)
-        print ('... completed for protocol 2')
+        print( ('... completed for protocol 2'))
     else:
-        print '[ERR] You did not input a 1 or a 2'
+        print( '[ERR] You did not input a 1 or a 2')
 
 
 
@@ -968,7 +974,7 @@ def hard_recover_servo(dev_name):
     ''' Hard recovery of a bricked servo by sending out a global reset to all servos in the chain at all baud rates '''
     raw_input('Make sure only one servo connected to USB2Dynamixel Device [ENTER]')
     raw_input('Connect power to the servo. [ENTER]')
-    print ('This may take a while...')
+    print( ('This may take a while...'))
 
     bauds = np.arange(8000, 250000, 200)
     for i in list(bauds):
@@ -1007,7 +1013,7 @@ if __name__ == '__main__':
     opt, args = p.parse_args()
 
     if opt.dev_name == None:
-        p.print_help()
+        p.print(_help())
         sys.exit(0)
 
     dyn = USB2Dynamixel_Device(opt.dev_name, opt.baud)
