@@ -1,6 +1,6 @@
 Yale OpenHand Node (ROS and Python Control)
 ==============
-
+![Yale Openhand](banner4.png)
 ## Getting Started
 
 Welcome to the Yale Grab Lab OpenHand Node Repository. All 3D files are openly available on the [OpenHand Hardware Github](https://github.com/grablab/openhand-hardware). The code provided in this repository supports the Model O, Model T42, and Model T. Additional models will be supported in the future. Additional documentation is available on the [OpenHand Website](http://www.eng.yale.edu/grablab/openhand/) with instruction manuals for fabrication and assembly. This repository supports Python2 and Python3, and Protocol1 (RX,MX actuators) and Protocol2 (X-series actuators) from Dynamixel. 
