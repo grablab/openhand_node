@@ -108,6 +108,7 @@ class OpenHandNode():
 		return resp
 
 	def ReadServosCallback(self,req):
+		#TODO: Implement sync read for the servos (in all read situations)
 		pos = [0.]*len(self.hand.servos)
 		ref = self.sRefs
 		enc = [0]*len(self.hand.servos)

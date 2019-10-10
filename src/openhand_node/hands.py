@@ -602,6 +602,16 @@ class Model_T42(OpenHand):
 		self.moveMotor(0,amnt)
 		self.moveMotor(1,amnt)
 
+	def change_motor_min(self,index, val):
+		if (index < 0 or index >= len(self.servos)):
+			print( "[ERR] invalid motor index "+repr(index))
+		else:
+			self.motorMin[index]=val
+			self.motorMax[index]=val+self.max_close
+
+			self.reset()
+			print( 'Index changed successfully...')
+
 	def followTrajectory(self):	#position-based closing mechanism
 		act1inputs = np.array([0.6777,0.6854,0.6820,0.6762,0.6705,0.6531,0.6363,0.6256,0.6162,0.6053,0.6012,0.5963,0.5935,0.5905,0.5888,0.5864,0.5846,0.5815,0.5782,0.5729,0.5654,0.5555,0.5467,0.5381,0.5317,0.5283,0.5274,0.5272,0.5271,0.5232,0.5179,0.5077,0.4962,0.4845,0.4764,0.4695,0.4669,0.4654,0.4624,0.4589,0.4556,0.4527,0.4502,0.4493,0.4491,0.4490,0.4490,0.4490,0.4490,0.4490])
 		act2inputs = np.array([0.6629,0.6726,0.6733,0.6751,0.6788,0.6784,0.6780,0.6791,0.6796,0.6753,0.6741,0.6728,0.6722,0.6717,0.6716,0.6717,0.6722,0.6726,0.6738,0.6751,0.6756,0.6754,0.6758,0.6758,0.6784,0.6818,0.6855,0.6858,0.6858,0.6827,0.6792,0.6762,0.6761,0.6759,0.6728,0.6675,0.6617,0.6560,0.6522,0.6514,0.6524,0.6533,0.6535,0.6520,0.6504,0.6497,0.6492,0.6491,0.6490,0.6490])
@@ -839,6 +849,15 @@ class Model_T(OpenHand):
 		self.servos[0].disable_torque_mode()
 		self.preventLoadError(0)
 		return True
+
+	def change_motor_min(self,index, val):
+		if (index < 0 or index >= len(self.servos)):
+			print( "[ERR] invalid motor index "+repr(index))
+		else:
+			self.motorMin[0]=val
+			self.motorMax[0]=val+self.max_close
+			self.reset()
+			print( 'Index changed successfully...')
 
 	def close_wheel(self,amnt=0.5,speed=0.2):	#closing through wheel mode
 		#set torque output to max, use wheel speed to modulate closing force
