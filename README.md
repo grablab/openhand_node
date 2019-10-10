@@ -15,10 +15,12 @@ The main body of the code is formulated for simple implementaion in ROS (tested 
 ## Python Control
 Python (works with both Python2 and Python3) code is used for easy control of the Dynamixel-based OpenHand designs. These Python objects depend on a modified version of the 'lib_robotis.py' library from Georgia Tech (included in our repository). The library has been updated to properly control both MX/RX (Protocol1) and X-series (Protocol2) servos, as well as accounting for possible header miscues as suggested by the pydynamixel library. Each hand object has pre-tested settings for servo bounds and torque output that we routinely use in our experiments. These values may vary for different hardware implementations or assembly processes. 
 
-Before you begin, you will need to have a working (preferably updated) version of either Python 2 or Python 3. This installation is available at [python.org](https://www.python.org/) for your designated operating system, and should include the `pip` installation as well. You will also be required to have the ```numpy``` and ```pyserial``` libraries installed. Once you have your preferred version of python installed, in your terminal (or command prompt) window, you should easily be able to install these libraries with the following commands on any directory level:
+Before you begin, you will need to have a working (preferably updated) version of either Python 2 or Python 3. This installation is available at [python.org](https://www.python.org/) for your designated operating system, and should include the `pip` installation as well. You will also be required to have the ```numpy```, ```scipy```, and ```pyserial``` libraries installed. Once you have your preferred version of python installed, in your terminal (or command prom
+pt) window, you should easily be able to install these libraries with the following commands on any directory level:
 
 ```python -m pip install pyserial```   
-```python -m pip install numpy```    
+```python -m pip install numpy```   
+```python -m pip install scipy```   
 
 USB port names are required for serial communication with the motors. This naming convention is different on every operating system, but can typically be found using the following commands (terminal for MacOS/Linux and command prompt for Windows). At this time, the hand should be powered through the USB hub via the wall adapter and the U2D2 controller should be plugged into your computer via USB:
 
@@ -37,7 +39,7 @@ Please note that an additional [driver](http://www.ftdichip.com/Drivers/D2XX.htm
 
 #### Finding Dynamixels Command: 
 
-Record the port name presented in the terminal window. You will now also need to know the address of each Dynamixel you intend to control. Addresses can be changed using the [Dynamixel Wizard](http://www.robotis.us/roboplus1/), in Windows or by using the command line tool presented later on. For the Model O case, we should expect to see 4 unique addresses when looking for the motor addresses. To find the addresses of your dynamixels, run the following command in a terminal window:
+Record the port name presented in the terminal window. You will now also need to know the address of each Dynamixel you intend to control. Addresses can be changed using the [Dynamixel Wizard](http://www.robotis.us/roboplus1/), in Windows or by using the command line tool presented later on. For the Model O case, we should expect to see 4 unique addresses (for the Model T42 there should be 2 unique addresses) when looking for the motor addresses. We will use the ```lib_robotis_mod.py``` program to find these addresses. Navigate to the ```src/openhand_node/``` folder and run the following command in a terminal window:
  
 Basic (write ```python3``` if not using Python 2, depending on your system configuration, and you may also need to use the ```sudo``` command before ```python``` or ```python3```):  
 `$ python lib_robotis_mod.py -d <YOUR_COM_PORT> --scan`  __OR__  
@@ -73,11 +75,24 @@ If all motors are connected properly (note the string of integers can be as big 
 `$ python -i hands.py`
 
 ```python
-T = Model_O)([port name], [abduction servo[1] id], [right forward servo[2] id],[left reverse servo[3] id],[thumb servo[4] id], [Dynamixel series ("RX", "MX")])  
+T = Model_O([port name], [abduction servo[1] id], [right forward servo[2] id],[left reverse servo[3] id],[thumb servo[4] id], [Dynamixel series ("RX", "MX", "XM")])  
 T.close([desired tendon length for close (0.0-1.0)])
 T.reset()
 T.release()  
 ```
+
+OR   
+
+
+`$ python -i hands.py`
+
+```python
+T = Model_T42([port name], [left finger servo id], [right finger servo id], [Dynamixel series ("RX", "MX","XM")])  
+T.close([desired tendon length for close (0.0-1.0)])
+T.reset()
+T.release()  
+```
+
 ### Example Usage:
 
 `$ python -i hands.py`
@@ -100,7 +115,7 @@ NOTE: Once initializing your openhand, the motor addresses are no longer used fo
 Tuning your OpenHand is one of the most important steps during the set up process. Due to the set screw gap in the dynamixel pulleys, it is often very difficult to tune the OpenHand perfectly without changing offsets in the code. We have implemented a simple function to find the correct offsets for each of the motors. This step may require a few iterations. 
 
 #### Finding the correct offset   
-We will proceed by assuming we are tesioning the Model O hand. It is important to recognize the correct order of IDs for initialization in the python command. The adduction motor should always be the first in the list, with the right finger next, left follows, and finally the thumb. We seek to set up the hand such that home position is with the tendons taught, but not moving the fingers, and the fingers to be perpendicular to the thumb. You are able to 'reset' or 'home' your hand if these offsets are correct which means we need to change the the minimum actuator value (which is implemented as a range from 0-1). You can find these offsets by iterating through values for each motor until the correct offset is recognized. The last string of characters signifies the types of actuators, either "MX", "RX", or "XM". For example:  
+We will proceed by assuming we are tensioning the Model O hand. It is important to recognize the correct order of IDs for initialization in the python command. The adduction motor should always be the first in the list, with the right finger next, left follows, and finally the thumb. We seek to set up the hand such that home position is with the tendons taught, but not moving the fingers, and the fingers to be perpendicular to the thumb. You are able to 'reset' or 'home' your hand if these offsets are correct which means we need to change the the minimum actuator value (which is implemented as a range from 0-1). You can find these offsets by iterating through values for each motor until the correct offset is recognized. The last string of characters signifies the types of actuators, either "MX", "RX", or "XM". For example:  
 
 `$ python -i hands.py`
 
