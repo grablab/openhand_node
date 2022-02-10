@@ -37,6 +37,11 @@ USB port names are required for serial communication with the motors. This namin
 
 Please note that an additional [driver](http://www.ftdichip.com/Drivers/D2XX.htm) may be required for serial communication in Windows. Also note single quotations around the name of the port will typically be required later for running these programs. 
 
+#### IMPORTANT NOTE FOR LINUX USERS
+There's a possibility that the port on your machine is not accessible to the U2D2. Essentially, serial comms with python are restricted. To overcome this issue, use the command:
+`$ sudo chmod 666 <YOUR_COM_PORT>` e.g.
+`$ sudo chmod 666 /dev/ttyUSB0`
+
 #### Finding Dynamixels Command: 
 
 Record the port name presented in the terminal window. You will now also need to know the address of each Dynamixel you intend to control. Addresses can be changed using the [Dynamixel Wizard](http://www.robotis.us/roboplus1/), in Windows or by using the command line tool presented later on. For the Model O case, we should expect to see 4 unique addresses (for the Model T42 there should be 2 unique addresses) when looking for the motor addresses. We will use the ```lib_robotis_mod.py``` program to find these addresses. Navigate to the ```src/openhand_node/``` folder and run the following command in a terminal window:
@@ -49,7 +54,7 @@ Example:
 `$ python lib_robotis_mod.py -d '/dev/ttyUSB0' --scan`   __OR__  
 `$ python lib_robotis_mod.py -d 'COM9' --scan`
 
-NOTE: This process can often be difficult to cancel out of in Windows (use ```ctrl + \``` in unix-based systems). Once dynamixels are found, you may close out of and restart the terminal without any changes to the configuration. If you have multiple dynamixels (daisy chain) connected and you are missing an ID for one or more motors, it is likely that there are motors in your system that share the same (address) ID, or an ID of 0 is used (invalid for Protocol 2). In this event, you will have to change the ID of matching motors so that they are unique in your system. While connecting just one motor to the serial module, you can run the following command:
+NOTE: This process can often be difficult to cancel out of in Windows (use ```ctrl + \``` in unix-based systems). Once dynamixels are found, you may close out of and restart the terminal without any changes to the configuration. If no dynamixels are found and you are using linux, please ensure the com ports are open (see IMPORTANT NOTE FOR LINUX USERS). If you have multiple dynamixels (daisy chain) connected and you are missing an ID for one or more motors, it is likely that there are motors in your system that share the same (address) ID, or an ID of 0 is used (invalid for Protocol 2). In this event, you will have to change the ID of matching motors so that they are unique in your system. While connecting just one motor to the serial module, you can run the following command:
 
 #### Setting New ID for Dynamixel Motors:  
 
